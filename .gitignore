@@ -1,0 +1,27 @@
+# Compiled class file
+*.class
+
+# Log files
+*.log
+
+# IntelliJ IDEA specific files
+.idea/
+*.iml
+
+# Eclipse specific files
+.classpath
+.project
+.settings/
+
+# Maven specific files
+target/
+mvnw
+mvnw.cmd
+.mvn/
+
+# Gradle specific files
+.gradle/
+build/
+
+# Spring Boot specific files
+spring-boot-starter-*.jar
