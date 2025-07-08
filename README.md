@@ -25,12 +25,6 @@ $ git clone https://github.com/ArthurPaes/votacao-back.git
 ```shell
 $ cd votacao-back
 ```
-- Execute the following commands to init and update the submodules:
-
-```shell
-$ git submodule init
-$ git submodule update
-```
 
 - Execute `docker-compose --build` to install all the dependencies and to run the project
 
