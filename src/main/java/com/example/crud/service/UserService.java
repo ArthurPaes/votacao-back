@@ -1,24 +1,34 @@
 package com.example.crud.service;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.example.crud.domain.model.User;
+import com.example.crud.exception.UserAlreadyExistsException;
 import com.example.crud.repository.UserRepository;
 import com.example.crud.utils.BcryptUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
-    public User createUser(User user) {
+    public void createUser(User user) {
+        try {
+            create(user);
+        } catch (IllegalArgumentException e) {
+            throw new UserAlreadyExistsException("DUPLICATE_FIELD", e);
+        }
+    }
+
+    private void create(User user) {
         if (userRepository.findByEmail(user.getEmail()) != null) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
@@ -26,7 +36,8 @@ public class UserService {
             throw new IllegalArgumentException("CPF já cadastrado");
         }
         user.setPassword(BcryptUtils.encryptPassword(user.getPassword()));
-        return userRepository.save(user);
+        var savedUser = userRepository.save(user);
+        log.info("User created with ID: {}", savedUser.getId());
     }
 
     public Boolean authenticate(String email, String password) {
