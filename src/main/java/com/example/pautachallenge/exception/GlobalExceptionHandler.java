@@ -1,50 +1,130 @@
 package com.example.pautachallenge.exception;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 
-import com.example.pautachallenge.infra.ErrorResponse;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "400",
+            description = "Dados de entrada inválidos",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(description = "Mensagem de erro de validação"),
+                examples = {
+                    @ExampleObject(
+                        name = "Validação Falhou",
+                        summary = "Dados inválidos",
+                        description = "Erro quando os dados não passam na validação",
+                        value = """
+                            {
+                                "message": "Nome deve ter pelo menos 3 caracteres",
+                                "timestamp": "2024-01-15T10:30:00",
+                                "status": 400
+                            }
+                            """
+                    )
+                }
+            )
+        )
+    })
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        log.error("Erro de validação: {}", ex.getMessage());
         
-        String errorMessage = "Erro de validação: " + errors.toString();
-        log.warn("Erro de validação capturado: {} - Request: {}", errorMessage, request.getDescription(false));
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("message", ex.getBindingResult().getFieldError().getDefaultMessage());
+        errorResponse.put("timestamp", LocalDateTime.now());
+        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
         
-        ErrorResponse errorResponse = new ErrorResponse(errorMessage, "VALIDATION_ERROR", request.getDescription(false));
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e, WebRequest request) {
-        log.warn("IllegalArgumentException capturada: {} - Request: {}", e.getMessage(), request.getDescription(false));
-        ErrorResponse errorResponse = new ErrorResponse(e.getMessage(), "VALIDATION_ERROR", request.getDescription(false));
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "400",
+            description = "Argumento inválido",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(description = "Mensagem de erro de argumento"),
+                examples = {
+                    @ExampleObject(
+                        name = "Argumento Inválido",
+                        summary = "Argumento inválido",
+                        description = "Erro quando um argumento é inválido",
+                        value = """
+                            {
+                                "message": "Credenciais inválidas!",
+                                "timestamp": "2024-01-15T10:30:00",
+                                "status": 400
+                            }
+                            """
+                    )
+                }
+            )
+        )
+    })
+    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("Argumento inválido: {}", ex.getMessage());
+        
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("message", ex.getMessage());
+        errorResponse.put("timestamp", LocalDateTime.now());
+        errorResponse.put("status", HttpStatus.BAD_REQUEST.value());
+        
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception e, WebRequest request) {
-        log.error("Exceção genérica capturada: {} - Request: {}", e.getMessage(), request.getDescription(false), e);
-        ErrorResponse errorResponse = new ErrorResponse("Erro interno do servidor", "INTERNAL_ERROR", request.getDescription(false));
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "500",
+            description = "Erro interno do servidor",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(description = "Mensagem de erro interno"),
+                examples = {
+                    @ExampleObject(
+                        name = "Erro Interno",
+                        summary = "Erro interno do servidor",
+                        description = "Erro quando ocorre uma exceção não tratada",
+                        value = """
+                            {
+                                "message": "Erro interno do servidor",
+                                "timestamp": "2024-01-15T10:30:00",
+                                "status": 500
+                            }
+                            """
+                    )
+                }
+            )
+        )
+    })
+    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+        log.error("Erro inesperado: {}", ex.getMessage(), ex);
+        
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("message", "Erro interno do servidor");
+        errorResponse.put("timestamp", LocalDateTime.now());
+        errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 } 

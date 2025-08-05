@@ -4,24 +4,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.context.request.WebRequest;
 
-import com.example.pautachallenge.infra.ErrorResponse;
+import java.util.Map;
 
 public class GlobalExceptionHandlerTest {
-
-    @Mock
-    private WebRequest webRequest;
 
     private GlobalExceptionHandler globalExceptionHandler;
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
         globalExceptionHandler = new GlobalExceptionHandler();
     }
 
@@ -29,24 +22,25 @@ public class GlobalExceptionHandlerTest {
     public void testHandleIllegalArgumentException() {
         IllegalArgumentException exception = new IllegalArgumentException("Email já cadastrado");
 
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleIllegalArgumentException(exception, webRequest);
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleIllegalArgumentException(exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("Email já cadastrado", response.getBody().getMessage());
-        assertEquals("VALIDATION_ERROR", response.getBody().getError());
-        assertNotNull(response.getBody().getTimestamp());
+        assertEquals("Email já cadastrado", response.getBody().get("message"));
+        assertEquals(400, response.getBody().get("status"));
+        assertNotNull(response.getBody().get("timestamp"));
     }
 
     @Test
     public void testHandleGenericException() {
         Exception exception = new RuntimeException("Erro inesperado");
 
-        ResponseEntity<ErrorResponse> response = globalExceptionHandler.handleGenericException(exception, webRequest);
+        ResponseEntity<Map<String, Object>> response = globalExceptionHandler.handleGenericException(exception);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("Erro interno do servidor", response.getBody().getMessage());
-        assertEquals("INTERNAL_ERROR", response.getBody().getError());
+        assertEquals("Erro interno do servidor", response.getBody().get("message"));
+        assertEquals(500, response.getBody().get("status"));
+        assertNotNull(response.getBody().get("timestamp"));
     }
 } 
