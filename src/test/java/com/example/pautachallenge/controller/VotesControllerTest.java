@@ -33,18 +33,30 @@ public class VotesControllerTest {
     @Test
     public void testCreateVote_Success() {
         VoteDTO voteDTO = new VoteDTO(1L, 1L, true);
-        Votes vote = new Votes(1L, 1L, 1L, true, VoteStatus.ABLE_TO_VOTE);
-        when(votesService.createVote(any(Votes.class))).thenReturn(vote);
+        
+        Votes expectedVote = new Votes();
+        expectedVote.setId(1L);
+        expectedVote.setUserId(1L);
+        expectedVote.setSectionId(1L);
+        expectedVote.setVote(true);
+        expectedVote.setStatus(VoteStatus.ABLE_TO_VOTE);
+        
+        when(votesService.createVote(any(Votes.class))).thenReturn(expectedVote);
         
         // Test multiple times to handle the random CPF validation
         boolean success = false;
         for (int i = 0; i < 10; i++) {
             try {
                 Votes result = votesController.createVote(voteDTO);
-                assertEquals(vote, result);
-                assertEquals(VoteStatus.ABLE_TO_VOTE, result.getStatus());
-                success = true;
-                break;
+                if (result.getStatus() == VoteStatus.ABLE_TO_VOTE && result.getId() != null) {
+                    assertEquals(VoteStatus.ABLE_TO_VOTE, result.getStatus());
+                    assertEquals(expectedVote.getId(), result.getId());
+                    assertEquals(voteDTO.getUserId(), result.getUserId());
+                    assertEquals(voteDTO.getSectionId(), result.getSectionId());
+                    assertEquals(voteDTO.getVote(), result.getVote());
+                    success = true;
+                    break;
+                }
             } catch (IllegalArgumentException e) {
                 // CPF validation failed, try again
                 continue;
@@ -93,18 +105,21 @@ public class VotesControllerTest {
         // Test multiple times to find an invalid CPF case
         boolean foundInvalidCPF = false;
         for (int i = 0; i < 20; i++) {
-            Votes result = votesController.createVote(voteDTO);
-            if (result.getStatus() == VoteStatus.UNABLE_TO_VOTE && result.getId() == null) {
-                assertEquals(VoteStatus.UNABLE_TO_VOTE, result.getStatus());
-                assertEquals(voteDTO.getUserId(), result.getUserId());
-                assertEquals(voteDTO.getSectionId(), result.getSectionId());
-                assertEquals(voteDTO.getVote(), result.getVote());
-                assertNull(result.getId());
-                foundInvalidCPF = true;
-                break;
+            try {
+                Votes result = votesController.createVote(voteDTO);
+                if (result.getStatus() == VoteStatus.UNABLE_TO_VOTE && result.getId() == null) {
+                    assertEquals(VoteStatus.UNABLE_TO_VOTE, result.getStatus());
+                    assertEquals(voteDTO.getUserId(), result.getUserId());
+                    assertEquals(voteDTO.getSectionId(), result.getSectionId());
+                    assertEquals(voteDTO.getVote(), result.getVote());
+                    assertNull(result.getId());
+                    foundInvalidCPF = true;
+                    break;
+                }
+            } catch (IllegalArgumentException e) {
+                // This is expected for duplicate votes, continue testing
+                continue;
             }
-            // Reset the mock after each attempt to avoid interference
-            reset(votesService);
         }
         
         assertTrue(foundInvalidCPF, "Should hit INVALID_CPF at least once in 20 tries");

@@ -6,11 +6,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.pautachallenge.domain.model.UserEntity;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 public class UserRepositoryTest {
 
@@ -21,7 +23,7 @@ public class UserRepositoryTest {
     public void setUp() {
         UserEntity user = new UserEntity();
         user.setName("John Doe");
-        user.setCpf("12345678901");
+        user.setCpf("12345678909"); // Valid CPF format
         user.setPassword("password");
         user.setEmail("john.doe@example.com");
         userRepository.save(user);
@@ -33,7 +35,7 @@ public class UserRepositoryTest {
 
         assertThat(foundUser).isNotNull();
         assertThat(foundUser.getName()).isEqualTo("John Doe");
-        assertThat(foundUser.getCpf()).isEqualTo("12345678901");
+        assertThat(foundUser.getCpf()).isEqualTo("12345678909");
         assertThat(foundUser.getPassword()).isEqualTo("password");
         assertThat(foundUser.getEmail()).isEqualTo("john.doe@example.com");
     }

@@ -7,6 +7,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.example.pautachallenge.domain.dto.SectionDTO;
 import com.example.pautachallenge.domain.dto.UserDTO;
@@ -17,6 +18,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
 @SpringBootTest
+@ActiveProfiles("test")
 public class ValidationTests {
 
     @Autowired
@@ -26,7 +28,7 @@ public class ValidationTests {
     public void testValidUserDTO() {
         UserDTO userDTO = new UserDTO();
         userDTO.setName("João Silva");
-        userDTO.setCpf("12345678901");
+        userDTO.setCpf("12345678909"); // Valid CPF format
         userDTO.setPassword("senha123");
         userDTO.setEmail("joao@example.com");
 
@@ -38,7 +40,7 @@ public class ValidationTests {
     public void testInvalidUserDTO_EmptyName() {
         UserDTO userDTO = new UserDTO();
         userDTO.setName("");
-        userDTO.setCpf("12345678901");
+        userDTO.setCpf("12345678909"); // Valid CPF format
         userDTO.setPassword("senha123");
         userDTO.setEmail("joao@example.com");
 
@@ -64,7 +66,7 @@ public class ValidationTests {
     public void testInvalidUserDTO_InvalidEmail() {
         UserDTO userDTO = new UserDTO();
         userDTO.setName("João Silva");
-        userDTO.setCpf("12345678901");
+        userDTO.setCpf("12345678909"); // Valid CPF format
         userDTO.setPassword("senha123");
         userDTO.setEmail("email-invalido"); // Email inválido
 

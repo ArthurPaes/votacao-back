@@ -16,10 +16,6 @@ import com.example.pautachallenge.service.UserService;
 
 public class UserControllerTests {
 
-    //Adicionar banco em memória para testes
-//    @SpringbootTest
-//    Banco em memória h2
-
     @Mock
     private UserService userService;
 

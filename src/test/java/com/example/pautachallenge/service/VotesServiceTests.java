@@ -8,16 +8,14 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.pautachallenge.domain.model.Votes;
+import com.example.pautachallenge.domain.model.VoteStatus;
 import com.example.pautachallenge.repository.VotesRepository;
 
-@ExtendWith(MockitoExtension.class)
 public class VotesServiceTests {
 
     @Mock
@@ -33,27 +31,50 @@ public class VotesServiceTests {
 
     @Test
     public void testCreateVote_Success() {
-        Votes votes = new Votes(1L, 1L, 1L, true);
+        Votes inputVotes = new Votes();
+        inputVotes.setSectionId(1L);
+        inputVotes.setUserId(1L);
+        inputVotes.setVote(true);
+        inputVotes.setStatus(VoteStatus.ABLE_TO_VOTE);
 
-        when(votesRepository.findByUserIdAndSectionId(anyLong(), anyLong())).thenReturn(Optional.empty());
+        Votes savedVotes = new Votes();
+        savedVotes.setId(1L);
+        savedVotes.setSectionId(1L);
+        savedVotes.setUserId(1L);
+        savedVotes.setVote(true);
+        savedVotes.setStatus(VoteStatus.ABLE_TO_VOTE);
 
-        when(votesRepository.save(any(Votes.class))).thenReturn(votes);
+        when(votesRepository.findByUserIdAndSectionId(1L, 1L)).thenReturn(Optional.empty());
+        when(votesRepository.save(any(Votes.class))).thenReturn(savedVotes);
 
-        Votes createdVote = votesService.createVote(votes);
+        Votes createdVote = votesService.createVote(inputVotes);
 
         assertNotNull(createdVote);
-        assertEquals(votes.getUserId(), createdVote.getUserId());
-        assertEquals(votes.getSectionId(), createdVote.getSectionId());
+        assertEquals(savedVotes.getUserId(), createdVote.getUserId());
+        assertEquals(savedVotes.getSectionId(), createdVote.getSectionId());
+        verify(votesRepository).save(any(Votes.class));
     }
 
     @Test
     public void testCreateVote_ExistingVote() {
-        Votes votes =new Votes(1L, 1L, 1L, true);
+        Votes inputVotes = new Votes();
+        inputVotes.setSectionId(1L);
+        inputVotes.setUserId(1L);
+        inputVotes.setVote(true);
+        inputVotes.setStatus(VoteStatus.ABLE_TO_VOTE);
 
-        when(votesRepository.findByUserIdAndSectionId(anyLong(), anyLong())).thenReturn(Optional.of(votes));
+        Votes existingVotes = new Votes();
+        existingVotes.setId(1L);
+        existingVotes.setSectionId(1L);
+        existingVotes.setUserId(1L);
+        existingVotes.setVote(true);
+        existingVotes.setStatus(VoteStatus.ABLE_TO_VOTE);
 
-        Votes createdVote = votesService.createVote(votes);
+        when(votesRepository.findByUserIdAndSectionId(1L, 1L)).thenReturn(Optional.of(existingVotes));
+
+        Votes createdVote = votesService.createVote(inputVotes);
 
         assertNull(createdVote);
+        verify(votesRepository, never()).save(any(Votes.class));
     }
 }
