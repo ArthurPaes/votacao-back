@@ -7,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.example.pautachallenge.domain.dto.SectionDTO;
 import com.example.pautachallenge.domain.interfaces.SectionWithVotesCount;
 import com.example.pautachallenge.domain.model.Section;
+import com.example.pautachallenge.domain.model.SectionBuilder;
 import com.example.pautachallenge.repository.SectionRepository;
 
 @Slf4j
@@ -25,16 +27,22 @@ public class SectionService {
         return sections;
     }
 
-    public Section createSection(Section section) {
-        log.debug("Criando nova seção: {}", section.getName());
-        Section newSection = new Section();
-        newSection.setName(section.getName());
-        newSection.setDescription(section.getDescription());
-        newSection.setExpiration(section.getExpiration());
-        newSection.setStart_at(LocalDateTime.now());
-
-        Section savedSection = sectionRepository.save(newSection);
+    public Section createSection(SectionDTO sectionDTO) {
+        log.debug("Criando nova seção: {}", sectionDTO.name());
+        
+        Section section = createSectionFromDTO(sectionDTO);
+        Section savedSection = sectionRepository.save(section);
+        
         log.debug("Seção salva com sucesso. ID: {}, Nome: {}", savedSection.getId(), savedSection.getName());
         return savedSection;
+    }
+
+    private Section createSectionFromDTO(SectionDTO sectionDTO) {
+        return SectionBuilder.builder()
+            .name(sectionDTO.name())
+            .description(sectionDTO.description())
+            .expiration(sectionDTO.expiration())
+            .startNow()
+            .build();
     }
 }

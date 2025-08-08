@@ -2,19 +2,12 @@ package com.example.pautachallenge.domain.interfaces;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserLoginRequest {
-    
+public record UserLoginRequest(
     @NotBlank(message = "Email é obrigatório")
     @Email(message = "Email deve ser válido")
-    private String email;
+    String email,
     
     @NotBlank(message = "Senha é obrigatória")
-    private String password;
-}
+    String password
+) {}

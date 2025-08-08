@@ -10,15 +10,19 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.pautachallenge.domain.dto.SectionDTO;
 import com.example.pautachallenge.domain.interfaces.SectionWithVotesCount;
 import com.example.pautachallenge.domain.model.Section;
 import com.example.pautachallenge.repository.SectionRepository;
 
-public class SectionServiceTests {
+@ExtendWith(MockitoExtension.class)
+class SectionServiceTests {
 
     @Mock
     private SectionRepository sectionRepository;
@@ -28,7 +32,6 @@ public class SectionServiceTests {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -40,14 +43,12 @@ public class SectionServiceTests {
         List<SectionWithVotesCount> result = sectionService.getAllSectionsWithVotes(userId);
 
         assertEquals(sections, result);
+        verify(sectionRepository).findAllWithVotesCount(userId);
     }
+
     @Test
     public void testCreateSection() {
-        // Arrange
-        Section section = new Section();
-        section.setName("Test Section");
-        section.setDescription("This is a test section");
-        section.setExpiration(10);
+        SectionDTO sectionDTO = new SectionDTO("Test Section", "This is a test section", 10);
 
         Section expectedSection = new Section();
         expectedSection.setId(1L);
@@ -56,12 +57,13 @@ public class SectionServiceTests {
         expectedSection.setExpiration(10);
         expectedSection.setStart_at(LocalDateTime.now());
 
-        when(sectionRepository.save(any(Section.class))).thenReturn(expectedSection); // Change to any(Section.class)
+        when(sectionRepository.save(any(Section.class))).thenReturn(expectedSection);
 
-        // Act
-        Section actualSection = sectionService.createSection(section);
+        Section actualSection = sectionService.createSection(sectionDTO);
 
-        // Assert
-        assertEquals(expectedSection, actualSection);
+        assertNotNull(actualSection);
+        assertEquals(expectedSection.getId(), actualSection.getId());
+        assertEquals(expectedSection.getName(), actualSection.getName());
+        verify(sectionRepository).save(any(Section.class));
     }
 }

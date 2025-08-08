@@ -18,21 +18,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.pautachallenge.domain.dto.UserDTO;
 import com.example.pautachallenge.domain.dto.UserResponseDTO;
 import com.example.pautachallenge.domain.model.UserEntity;
+import com.example.pautachallenge.infra.mapper.UserMapper;
 import com.example.pautachallenge.repository.UserRepository;
 import com.example.pautachallenge.utils.BcryptUtils;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTests {
+class UserServiceTests {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserMapper userMapper;
 
     @InjectMocks
     private UserService userService;
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -41,28 +44,43 @@ public class UserServiceTests {
                 new UserEntity(1L, "John Doe 1", "123456789", "password", "test@example.com"),
                 new UserEntity(2L, "John Doe 2", "123456789", "password", "test2@example.com"));
 
+        List<UserResponseDTO> expectedResponseDTOs = Arrays.asList(
+                new UserResponseDTO(1L, "John Doe 1", "123456789", "test@example.com"),
+                new UserResponseDTO(2L, "John Doe 2", "123456789", "test2@example.com"));
+
         when(userRepository.findAll()).thenReturn(users);
+        when(userMapper.toResponseDTO(any(UserEntity.class))).thenAnswer(invocation -> {
+            UserEntity entity = invocation.getArgument(0);
+            if (entity.getId() == 1L) {
+                return expectedResponseDTOs.get(0);
+            } else {
+                return expectedResponseDTOs.get(1);
+            }
+        });
 
         List<UserResponseDTO> returnedUsers = userService.getUsers();
 
-        assertEquals(users.size(), returnedUsers.size());
-        assertEquals(users.get(0).getEmail(), returnedUsers.get(0).getEmail());
-        assertEquals(users.get(1).getEmail(), returnedUsers.get(1).getEmail());
+        assertEquals(2, returnedUsers.size());
+        assertEquals(expectedResponseDTOs.get(0).email(), returnedUsers.get(0).email());
+        assertEquals(expectedResponseDTOs.get(1).email(), returnedUsers.get(1).email());
     }
 
     @Test
     public void testCreateUser() {
         UserDTO userDTO = new UserDTO("John Doe", "123456789", "password", "test@example.com");
         UserEntity userEntity = new UserEntity(1L, "John Doe", "123456789", "encrypted_password", "test@example.com");
+        UserResponseDTO expectedResponseDTO = new UserResponseDTO(1L, "John Doe", "123456789", "test@example.com");
 
-        when(userRepository.findByEmail(userDTO.getEmail())).thenReturn(null);
-        when(userRepository.findByCpf(userDTO.getCpf())).thenReturn(null);
+        when(userRepository.findByEmail(userDTO.email())).thenReturn(null);
+        when(userRepository.findByCpf(userDTO.cpf())).thenReturn(null);
+        when(userMapper.toEntity(userDTO)).thenReturn(userEntity);
         when(userRepository.save(any(UserEntity.class))).thenReturn(userEntity);
+        when(userMapper.toResponseDTO(userEntity)).thenReturn(expectedResponseDTO);
 
         UserResponseDTO createdUser = userService.createUser(userDTO);
 
-        assertEquals(userEntity.getEmail(), createdUser.getEmail());
-        assertNotNull(createdUser.getId());
+        assertEquals(expectedResponseDTO.email(), createdUser.email());
+        assertNotNull(createdUser.id());
     }
 
     @Test
@@ -73,7 +91,6 @@ public class UserServiceTests {
 
         when(userRepository.findByEmail(email)).thenReturn(user);
 
-        // Should not throw exception
         assertDoesNotThrow(() -> userService.authenticate(email, password));
     }
 
@@ -86,7 +103,6 @@ public class UserServiceTests {
 
         when(userRepository.findByEmail(email)).thenReturn(user);
 
-        // Should throw exception
         assertThrows(IllegalArgumentException.class, () -> userService.authenticate(email, password));
     }
 
@@ -94,13 +110,25 @@ public class UserServiceTests {
     public void testFindUser() {
         String email = "test@example.com";
         UserEntity user = new UserEntity(1L, "John Doe", "123456789", "password", "test@example.com");
+        UserResponseDTO expectedResponseDTO = new UserResponseDTO(1L, "John Doe", "123456789", "test@example.com");
 
         when(userRepository.findByEmail(email)).thenReturn(user);
+        when(userMapper.toResponseDTO(user)).thenReturn(expectedResponseDTO);
 
         UserResponseDTO foundUser = userService.findUser(email);
 
         assertNotNull(foundUser);
-        assertEquals(email, foundUser.getEmail());
+        assertEquals(expectedResponseDTO.email(), foundUser.email());
     }
 
+    @Test
+    public void testFindUser_NotFound() {
+        String email = "nonexistent@example.com";
+
+        when(userRepository.findByEmail(email)).thenReturn(null);
+
+        UserResponseDTO foundUser = userService.findUser(email);
+
+        assertNull(foundUser);
+    }
 }

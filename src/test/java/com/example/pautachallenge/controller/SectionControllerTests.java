@@ -10,16 +10,19 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.pautachallenge.domain.dto.SectionDTO;
 import com.example.pautachallenge.domain.interfaces.SectionWithVotesCount;
 import com.example.pautachallenge.domain.model.Section;
 import com.example.pautachallenge.service.SectionService;
 
-public class SectionControllerTests {
+@ExtendWith(MockitoExtension.class)
+class SectionControllerTests {
 
     @Mock
     private SectionService sectionService;
@@ -29,7 +32,6 @@ public class SectionControllerTests {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
     }
 
     static class SectionWithVotesCountImpl implements SectionWithVotesCount {
@@ -91,10 +93,12 @@ public class SectionControllerTests {
         createdSection.setExpiration(10);
         createdSection.setStart_at(LocalDateTime.now());
 
-        when(sectionService.createSection(any(Section.class))).thenReturn(createdSection);
+        when(sectionService.createSection(any(SectionDTO.class))).thenReturn(createdSection);
 
         Section result = sectionController.createSection(sectionDTO);
-        assertEquals(createdSection, result);
-        verify(sectionService).createSection(any(Section.class));
+        assertNotNull(result);
+        assertEquals(createdSection.getId(), result.getId());
+        assertEquals(createdSection.getName(), result.getName());
+        verify(sectionService).createSection(any(SectionDTO.class));
     }
 }

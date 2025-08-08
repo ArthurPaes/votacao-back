@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 
 import com.example.pautachallenge.domain.dto.UserDTO;
 import com.example.pautachallenge.domain.dto.UserResponseDTO;
+import com.example.pautachallenge.domain.interfaces.UserLoginRequest;
 import com.example.pautachallenge.domain.model.UserEntity;
+import com.example.pautachallenge.infra.mapper.UserMapper;
 import com.example.pautachallenge.repository.UserRepository;
 import com.example.pautachallenge.utils.BcryptUtils;
 
@@ -18,58 +20,78 @@ import com.example.pautachallenge.utils.BcryptUtils;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public List<UserResponseDTO> getUsers() {
         log.debug("Buscando todos os usuários");
         List<UserResponseDTO> users = userRepository.findAll().stream()
-                .map(this::convertToResponseDTO)
+                .map(userMapper::toResponseDTO)
                 .collect(Collectors.toList());
         log.debug("Encontrados {} usuários", users.size());
         return users;
     }
 
     public UserResponseDTO createUser(UserDTO userDTO) {
-        log.info("Criando um novo usuário com o email: {}", userDTO.getEmail());
+        log.info("Criando um novo usuário com o email: {}", userDTO.email());
         
-        log.debug("Verificando se email já está cadastrado: {}", userDTO.getEmail());
-        if (userRepository.findByEmail(userDTO.getEmail()) != null) {
-            log.warn("Tentativa de criar usuário com email já cadastrado: {}", userDTO.getEmail());
+        validateUserUniqueness(userDTO);
+        
+        UserEntity userEntity = createUserEntity(userDTO);
+        UserEntity savedUser = userRepository.save(userEntity);
+        
+        log.info("Usuário criado com sucesso. ID: {}, Email: {}", savedUser.getId(), savedUser.getEmail());
+        return userMapper.toResponseDTO(savedUser);
+    }
+
+    private void validateUserUniqueness(UserDTO userDTO) {
+        validateEmailUniqueness(userDTO.email());
+        validateCpfUniqueness(userDTO.cpf());
+    }
+
+    private void validateEmailUniqueness(String email) {
+        log.debug("Verificando se email já está cadastrado: {}", email);
+        if (userRepository.findByEmail(email) != null) {
+            log.warn("Tentativa de criar usuário com email já cadastrado: {}", email);
             throw new IllegalArgumentException("Email já cadastrado");
         }
-        
-        log.debug("Verificando se CPF já está cadastrado: {}", userDTO.getCpf());
-        if (userRepository.findByCpf(userDTO.getCpf()) != null) {
-            log.warn("Tentativa de criar usuário com CPF já cadastrado: {}", userDTO.getCpf());
+    }
+
+    private void validateCpfUniqueness(String cpf) {
+        log.debug("Verificando se CPF já está cadastrado: {}", cpf);
+        if (userRepository.findByCpf(cpf) != null) {
+            log.warn("Tentativa de criar usuário com CPF já cadastrado: {}", cpf);
             throw new IllegalArgumentException("CPF já cadastrado");
         }
-        
+    }
+
+    private UserEntity createUserEntity(UserDTO userDTO) {
         log.debug("Convertendo DTO para entidade e criptografando senha");
-        UserEntity userEntity = convertToEntity(userDTO);
+        UserEntity userEntity = userMapper.toEntity(userDTO);
         userEntity.setPassword(BcryptUtils.encryptPassword(userEntity.getPassword()));
-        
-        UserEntity savedUser = userRepository.save(userEntity);
-        log.info("Usuário criado com sucesso. ID: {}, Email: {}", savedUser.getId(), savedUser.getEmail());
-        return convertToResponseDTO(savedUser);
+        return userEntity;
     }
 
     public void authenticate(String email, String password) {
         log.debug("Tentativa de autenticação para o email: {}", email);
+        UserEntity user = findUserByEmail(email);
+        validatePassword(user, password);
+        log.info("Autenticação realizada com sucesso para o email: {}", email);
+    }
+
+    private UserEntity findUserByEmail(String email) {
         UserEntity user = userRepository.findByEmail(email);
-        
-        // Se o usuário não existir ou a senha não coincidir, lança uma exceção
         if (user == null) {
             log.warn("Tentativa de login com email inexistente: {}", email);
             throw new IllegalArgumentException("Credenciais inválidas!");
         }
-        
+        return user;
+    }
+
+    private void validatePassword(UserEntity user, String password) {
         if (!BcryptUtils.comparePasswords(password, user.getPassword())) {
-            log.warn("Tentativa de login com senha incorreta para o email: {}", email);
+            log.warn("Tentativa de login com senha incorreta para o email: {}", user.getEmail());
             throw new IllegalArgumentException("Credenciais inválidas!");
         }
-        
-        log.info("Autenticação realizada com sucesso para o email: {}", email);
-        // Se chegou até aqui, a autenticação foi bem-sucedida
-        // Não retorna nada, apenas não lança exceção
     }
 
     public UserResponseDTO findUser(String email) {
@@ -77,31 +99,21 @@ public class UserService {
         UserEntity user = userRepository.findByEmail(email);
         if (user != null) {
             log.debug("Usuário encontrado. ID: {}, Email: {}", user.getId(), user.getEmail());
-            return convertToResponseDTO(user);
-        } else {
-            log.debug("Usuário não encontrado para o email: {}", email);
-            return null;
+            return userMapper.toResponseDTO(user);
         }
+        log.debug("Usuário não encontrado para o email: {}", email);
+        return null;
     }
 
-    // Métodos de conversão
-    private UserEntity convertToEntity(UserDTO userDTO) {
-        log.trace("Convertendo UserDTO para UserEntity");
-        UserEntity userEntity = new UserEntity();
-        userEntity.setName(userDTO.getName());
-        userEntity.setCpf(userDTO.getCpf());
-        userEntity.setPassword(userDTO.getPassword());
-        userEntity.setEmail(userDTO.getEmail());
-        return userEntity;
-    }
-
-    private UserResponseDTO convertToResponseDTO(UserEntity userEntity) {
-        log.trace("Convertendo UserEntity para UserResponseDTO");
-        return new UserResponseDTO(
-            userEntity.getId(),
-            userEntity.getName(),
-            userEntity.getCpf(),
-            userEntity.getEmail()
-        );
+    public UserResponseDTO login(UserLoginRequest userBody) {
+        log.info("Tentativa de login para o email: {}", userBody.email());
+        
+        authenticate(userBody.email(), userBody.password());
+        UserResponseDTO user = findUser(userBody.email());
+        
+        log.info("Login realizado com sucesso para o email: {}", userBody.email());
+        log.debug("Retornando dados do usuário: {}", user.email());
+        
+        return user;
     }
 }

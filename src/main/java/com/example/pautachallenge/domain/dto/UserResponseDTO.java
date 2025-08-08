@@ -1,15 +1,8 @@
 package com.example.pautachallenge.domain.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class UserResponseDTO {
-    private Long id;
-    private String name;
-    private String cpf;
-    private String email;
-} 
+public record UserResponseDTO(
+    Long id,
+    String name,
+    String cpf,
+    String email
+) {} 

@@ -1,48 +1,70 @@
 package com.example.pautachallenge.repository;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 
+import com.example.pautachallenge.domain.model.VoteStatus;
 import com.example.pautachallenge.domain.model.Votes;
 
-@SpringBootTest
-@Transactional
-public class VotesRepositoryTest {
+@DataJpaTest
+@ActiveProfiles("test")
+class VotesRepositoryTest {
 
     @Autowired
     private VotesRepository votesRepository;
 
-    @BeforeEach
-    public void setUp() {
-        votesRepository.deleteAll(); // Clean up to avoid duplicates
+    @Test
+    public void testSaveVote() {
         Votes vote = new Votes();
         vote.setUserId(1L);
         vote.setSectionId(1L);
         vote.setVote(true);
+        vote.setStatus(VoteStatus.ABLE_TO_VOTE);
+
+        Votes savedVote = votesRepository.save(vote);
+        
+        assertNotNull(savedVote);
+        assertNotNull(savedVote.getId());
+        assertEquals(1L, savedVote.getUserId());
+        assertEquals(1L, savedVote.getSectionId());
+        assertTrue(savedVote.getVote());
+        assertEquals(VoteStatus.ABLE_TO_VOTE, savedVote.getStatus());
+    }
+
+    @Test
+    public void testFindByUserIdAndSectionId() {
+        Votes vote = new Votes();
+        vote.setUserId(1L);
+        vote.setSectionId(1L);
+        vote.setVote(true);
+        vote.setStatus(VoteStatus.ABLE_TO_VOTE);
+
         votesRepository.save(vote);
-    }
-
-    @Test
-    public void whenFindByUserIdAndSectionId_thenReturnVote() {
+        
         Optional<Votes> foundVote = votesRepository.findByUserIdAndSectionId(1L, 1L);
-
-        assertThat(foundVote).isPresent();
-        assertThat(foundVote.get().getUserId()).isEqualTo(1L);
-        assertThat(foundVote.get().getSectionId()).isEqualTo(1L);
-        assertThat(foundVote.get().getVote()).isEqualTo(true);
+        assertTrue(foundVote.isPresent());
+        assertEquals(1L, foundVote.get().getUserId());
+        assertEquals(1L, foundVote.get().getSectionId());
     }
 
     @Test
-    public void whenFindByUserIdAndSectionId_thenReturnEmpty() {
-        Optional<Votes> foundVote = votesRepository.findByUserIdAndSectionId(2L, 2L);
-
-        assertThat(foundVote).isNotPresent();
+    public void testFindByUserIdAndSectionIdNotFound() {
+        Optional<Votes> foundVote = votesRepository.findByUserIdAndSectionId(999L, 999L);
+        assertFalse(foundVote.isPresent());
     }
-}
+
+    @Test
+    public void testFindAll() {
+        List<Votes> votes = votesRepository.findAll();
+        assertNotNull(votes);
+        // Como não há dados no banco de teste, esperamos uma lista vazia
+        assertEquals(0, votes.size());
+    }
+} 

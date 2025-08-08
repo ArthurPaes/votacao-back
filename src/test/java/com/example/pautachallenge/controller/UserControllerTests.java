@@ -14,11 +14,11 @@ import com.example.pautachallenge.domain.dto.UserDTO;
 import com.example.pautachallenge.domain.dto.UserResponseDTO;
 import com.example.pautachallenge.service.UserService;
 
-public class UserControllerTests {
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-    //Adicionar banco em memória para testes
-//    @SpringbootTest
-//    Banco em memória h2
+@ExtendWith(MockitoExtension.class)
+class UserControllerTests {
 
     @Mock
     private UserService userService;
@@ -28,7 +28,6 @@ public class UserControllerTests {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -40,9 +39,9 @@ public class UserControllerTests {
 
         UserResponseDTO result = userController.createUser(userDTO);
 
-        assertEquals(userResponse, result);
-        assertEquals(userResponse.getId(), result.getId());
-        assertEquals(userResponse.getEmail(), result.getEmail());
+        assertNotNull(result);
+        assertEquals(userResponse.id(), result.id());
+        assertEquals(userResponse.email(), result.email());
     }
 
     @Test
@@ -52,7 +51,6 @@ public class UserControllerTests {
         when(userService.createUser(any(UserDTO.class)))
             .thenThrow(new IllegalArgumentException("Email já cadastrado"));
 
-        // Verifica se a exceção é lançada corretamente
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             userController.createUser(userDTO);
         });

@@ -14,7 +14,11 @@ import com.example.pautachallenge.domain.interfaces.UserLoginRequest;
 import com.example.pautachallenge.domain.dto.UserResponseDTO;
 import com.example.pautachallenge.service.UserService;
 
-public class AuthControllerTests {
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class AuthControllerTests {
 
     @Mock
     private UserService userService;
@@ -24,7 +28,6 @@ public class AuthControllerTests {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -32,21 +35,20 @@ public class AuthControllerTests {
         UserLoginRequest request = new UserLoginRequest("test@example.com", "password");
         UserResponseDTO mockUser = new UserResponseDTO(1L, "John Doe", "123456789", "test@example.com");
 
-        doNothing().when(userService).authenticate(anyString(), anyString());
-        when(userService.findUser(anyString())).thenReturn(mockUser);
+        when(userService.login(any(UserLoginRequest.class))).thenReturn(mockUser);
 
         UserResponseDTO result = authController.login(request);
 
-        assertEquals(mockUser, result);
-        assertEquals(mockUser.getId(), result.getId());
-        assertEquals(mockUser.getEmail(), result.getEmail());
+        assertNotNull(result);
+        assertEquals(mockUser.id(), result.id());
+        assertEquals(mockUser.email(), result.email());
     }
 
     @Test
     public void testLogin_FailedAuthentication() {
         UserLoginRequest request = new UserLoginRequest("test@example.com", "password");
 
-        doThrow(new IllegalArgumentException("Credenciais inválidas!")).when(userService).authenticate(anyString(), anyString());
+        doThrow(new IllegalArgumentException("Credenciais inválidas!")).when(userService).login(any(UserLoginRequest.class));
 
         assertThrows(IllegalArgumentException.class, () -> {
             authController.login(request);
