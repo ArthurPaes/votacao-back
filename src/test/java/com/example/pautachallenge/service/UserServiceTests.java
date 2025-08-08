@@ -40,9 +40,21 @@ class UserServiceTests {
 
     @Test
     public void testGetUsers() {
-        List<UserEntity> users = Arrays.asList(
-                new UserEntity(1L, "John Doe 1", "123456789", "password", "test@example.com"),
-                new UserEntity(2L, "John Doe 2", "123456789", "password", "test2@example.com"));
+        UserEntity user1 = new UserEntity();
+        user1.setId(1L);
+        user1.setName("John Doe 1");
+        user1.setCpf("123456789");
+        user1.setPassword("password");
+        user1.setEmail("test@example.com");
+        
+        UserEntity user2 = new UserEntity();
+        user2.setId(2L);
+        user2.setName("John Doe 2");
+        user2.setCpf("123456789");
+        user2.setPassword("password");
+        user2.setEmail("test2@example.com");
+        
+        List<UserEntity> users = Arrays.asList(user1, user2);
 
         List<UserResponseDTO> expectedResponseDTOs = Arrays.asList(
                 new UserResponseDTO(1L, "John Doe 1", "123456789", "test@example.com"),
@@ -87,7 +99,12 @@ class UserServiceTests {
     public void testAuthenticate_ValidCredentials() {
         String email = "test@example.com";
         String password = "password";
-        UserEntity user = new UserEntity(1L, "John Doe", "123456789", BcryptUtils.encryptPassword(password), "test@example.com");
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        user.setName("John Doe");
+        user.setCpf("123456789");
+        user.setPassword(BcryptUtils.encryptPassword(password));
+        user.setEmail("test@example.com");
 
         when(userRepository.findByEmail(email)).thenReturn(user);
 
@@ -98,8 +115,12 @@ class UserServiceTests {
     public void testAuthenticate_InvalidCredentials() {
         String email = "test@example.com";
         String password = "password";
-        UserEntity user = new UserEntity(1L, "John Doe", "123456789", BcryptUtils.encryptPassword("different_password"),
-                "test@example.com");
+        UserEntity user = new UserEntity();
+        user.setId(1L);
+        user.setName("John Doe");
+        user.setCpf("123456789");
+        user.setPassword(BcryptUtils.encryptPassword("different_password"));
+        user.setEmail("test@example.com");
 
         when(userRepository.findByEmail(email)).thenReturn(user);
 

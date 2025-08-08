@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.pautachallenge.domain.dto.VoteDTO;
 import com.example.pautachallenge.domain.model.VoteStatus;
 import com.example.pautachallenge.domain.model.Votes;
+import com.example.pautachallenge.domain.model.VoteStatus;
 import com.example.pautachallenge.repository.VotesRepository;
 
 @ExtendWith(MockitoExtension.class)

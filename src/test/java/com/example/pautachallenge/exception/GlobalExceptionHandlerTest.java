@@ -1,6 +1,7 @@
 package com.example.pautachallenge.exception;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,14 +15,15 @@ import com.example.pautachallenge.infra.ErrorResponse;
 @ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
 
+    private GlobalExceptionHandler globalExceptionHandler;
+    
     @Mock
     private WebRequest webRequest;
-
-    private GlobalExceptionHandler globalExceptionHandler;
 
     @BeforeEach
     public void setUp() {
         globalExceptionHandler = new GlobalExceptionHandler();
+        when(webRequest.getDescription(false)).thenReturn("Mock request");
     }
 
     @Test
@@ -39,7 +41,7 @@ class GlobalExceptionHandlerTest {
     @Test
     public void testHandleGenericException() {
         Exception exception = new RuntimeException("Erro inesperado");
-
+        
         ErrorResponse response = globalExceptionHandler.handleGenericException(exception, webRequest);
 
         assertNotNull(response);
