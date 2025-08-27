@@ -43,7 +43,7 @@
     </appender>
 
     <!-- Loggers específicos -->
-    <logger name="com.example.pautachallenge" level="DEBUG" additivity="false">
+    <logger name="com.sicredi.pautachallenge" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </logger>
