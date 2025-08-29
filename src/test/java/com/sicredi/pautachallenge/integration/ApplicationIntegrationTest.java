@@ -3,6 +3,8 @@ package com.sicredi.pautachallenge.integration;
 import com.sicredi.pautachallenge.domain.dto.UserDTO;
 import com.sicredi.pautachallenge.domain.dto.SectionDTO;
 import com.sicredi.pautachallenge.domain.dto.VoteDTO;
+import com.sicredi.pautachallenge.domain.interfaces.UserLoginRequest;
+import com.sicredi.pautachallenge.exception.AuthenticationException;
 import com.sicredi.pautachallenge.service.UserService;
 import com.sicredi.pautachallenge.service.SectionService;
 import com.sicredi.pautachallenge.service.VotesService;
@@ -15,6 +17,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -175,6 +180,10 @@ public class ApplicationIntegrationTest {
         // Test authentication with invalid credentials
         String invalidAuthRequest = "{\"email\":\"invalid@example.com\",\"password\":\"wrongpassword\"}";
         
+        // Configure mock to throw AuthenticationException for invalid credentials
+        when(userService.login(any(UserLoginRequest.class)))
+            .thenThrow(new AuthenticationException("Credenciais inválidas!"));
+        
         mockMvc.perform(post("/auth")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(invalidAuthRequest))
@@ -213,6 +222,10 @@ public class ApplicationIntegrationTest {
     public void testVoteWithExpiredSection() throws Exception {
         // Test voting on an expired section
         VoteDTO expiredVote = new VoteDTO(999L, 1L, true); // Non-existent section
+
+        // Configure mock to throw IllegalArgumentException for non-existent/expired section
+        when(votesService.createVote(any(VoteDTO.class)))
+            .thenThrow(new IllegalArgumentException("Seção não encontrada ou expirada."));
 
         String expiredVoteJson = objectMapper.writeValueAsString(expiredVote);
         

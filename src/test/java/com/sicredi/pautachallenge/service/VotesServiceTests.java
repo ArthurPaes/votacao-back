@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +16,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sicredi.pautachallenge.domain.dto.VoteDTO;
+import com.sicredi.pautachallenge.domain.model.Section;
 import com.sicredi.pautachallenge.domain.model.VoteStatus;
 import com.sicredi.pautachallenge.domain.model.Votes;
-import com.sicredi.pautachallenge.domain.model.VoteStatus;
+import com.sicredi.pautachallenge.repository.SectionRepository;
 import com.sicredi.pautachallenge.repository.VotesRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,11 +28,21 @@ class VotesServiceTests {
     @Mock
     private VotesRepository votesRepository;
 
+    @Mock
+    private SectionRepository sectionRepository;
+
     @InjectMocks
     private VotesService votesService;
 
     @BeforeEach
     public void setUp() {
+        // Mock a valid section for all tests
+        Section validSection = new Section();
+        validSection.setId(1L);
+        validSection.setStart_at(LocalDateTime.now());
+        validSection.setExpiration(60); // 60 minutes
+        
+        when(sectionRepository.findById(1L)).thenReturn(Optional.of(validSection));
     }
 
     @Test
