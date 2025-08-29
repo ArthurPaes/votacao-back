@@ -38,6 +38,14 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(ex.getBindingResult().getFieldError().getDefaultMessage(), "VALIDATION_ERROR", description);
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleAuthenticationException(AuthenticationException e, WebRequest request) {
+        String description = request != null ? request.getDescription(false) : "Unknown request";
+        log.warn("AuthenticationException capturada: {} - Request: {}", e.getMessage(), description);
+        return new ErrorResponse(e.getMessage(), "AUTHENTICATION_ERROR", description);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgumentException(IllegalArgumentException e, WebRequest request) {

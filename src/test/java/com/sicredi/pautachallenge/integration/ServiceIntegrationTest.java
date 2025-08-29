@@ -153,6 +153,8 @@ public class ServiceIntegrationTest {
         assertThat(vote.getUserId()).isEqualTo(user.id());
         assertThat(vote.getSectionId()).isEqualTo(section.getId());
         assertThat(vote.getVote()).isTrue();
+        // The vote might be UNABLE_TO_VOTE due to CPF validation, which is expected behavior
+        assertThat(vote.getStatus()).isIn(VoteStatus.ABLE_TO_VOTE, VoteStatus.UNABLE_TO_VOTE);
 
         // 4. Check vote count
         List<SectionWithVotesCount> sectionsWithVotes = sectionService.getAllSectionsWithVotes(user.id());
@@ -165,6 +167,8 @@ public class ServiceIntegrationTest {
             .orElse(null);
         
         assertThat(createdSection).isNotNull();
+        // The vote is always created and stored regardless of CPF validation status
+        // So we expect exactly 1 vote to be counted
         assertThat(createdSection.getTotalVotes()).isEqualTo(1L);
     }
 

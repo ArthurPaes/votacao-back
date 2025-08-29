@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.sicredi.pautachallenge.domain.dto.UserDTO;
 import com.sicredi.pautachallenge.domain.dto.UserResponseDTO;
 import com.sicredi.pautachallenge.domain.model.UserEntity;
+import com.sicredi.pautachallenge.exception.AuthenticationException;
 import com.sicredi.pautachallenge.infra.mapper.UserMapper;
 import com.sicredi.pautachallenge.repository.UserRepository;
 import com.sicredi.pautachallenge.utils.BcryptUtils;
@@ -124,7 +125,7 @@ class UserServiceTests {
 
         when(userRepository.findByEmail(email)).thenReturn(user);
 
-        assertThrows(IllegalArgumentException.class, () -> userService.authenticate(email, password));
+        assertThrows(AuthenticationException.class, () -> userService.authenticate(email, password));
     }
 
     @Test
