@@ -8,19 +8,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.sicredi.pautachallenge.domain.dto.VoteDTO;
+import com.sicredi.pautachallenge.domain.model.Section;
 import com.sicredi.pautachallenge.domain.model.VoteStatus;
 import com.sicredi.pautachallenge.domain.model.Votes;
+import com.sicredi.pautachallenge.repository.SectionRepository;
 import com.sicredi.pautachallenge.repository.VotesRepository;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class VotesService {
     private final VotesRepository repository;
+    private final SectionRepository sectionRepository;
 
     public Votes createVote(VoteDTO voteDTO) {
         log.info("Processando criação de voto. Usuário: {}, Seção: {}, Voto: {}", 
                 voteDTO.userId(), voteDTO.sectionId(), voteDTO.vote());
+        
+        // Validate section exists and is not expired
+        validateSection(voteDTO.sectionId());
         
         if (!isValidCPF(voteDTO.userId())) {
             return createInvalidVote(voteDTO);
@@ -32,6 +40,24 @@ public class VotesService {
         Votes createdVote = processVoteCreation(votes);
         
         return processVoteResult(createdVote, voteDTO);
+    }
+
+    private void validateSection(Long sectionId) {
+        Section section = sectionRepository.findById(sectionId).orElse(null);
+        if (section == null) {
+            log.warn("Tentativa de voto em seção inexistente: {}", sectionId);
+            throw new IllegalArgumentException("Seção não encontrada");
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expirationTime = section.getStart_at().plusMinutes(section.getExpiration());
+        
+        if (now.isAfter(expirationTime)) {
+            log.warn("Tentativa de voto em seção expirada: {} (expirou em: {})", sectionId, expirationTime);
+            throw new IllegalArgumentException("Seção expirada");
+        }
+        
+        log.debug("Seção validada com sucesso: {} (expira em: {})", sectionId, expirationTime);
     }
 
     private boolean isValidCPF(Long userId) {

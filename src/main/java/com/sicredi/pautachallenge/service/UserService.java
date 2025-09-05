@@ -11,6 +11,7 @@ import com.sicredi.pautachallenge.domain.dto.UserDTO;
 import com.sicredi.pautachallenge.domain.dto.UserResponseDTO;
 import com.sicredi.pautachallenge.domain.interfaces.UserLoginRequest;
 import com.sicredi.pautachallenge.domain.model.UserEntity;
+import com.sicredi.pautachallenge.exception.AuthenticationException;
 import com.sicredi.pautachallenge.infra.mapper.UserMapper;
 import com.sicredi.pautachallenge.repository.UserRepository;
 import com.sicredi.pautachallenge.utils.BcryptUtils;
@@ -82,7 +83,7 @@ public class UserService {
         UserEntity user = userRepository.findByEmail(email);
         if (user == null) {
             log.warn("Tentativa de login com email inexistente: {}", email);
-            throw new IllegalArgumentException("Credenciais inválidas!");
+            throw new AuthenticationException("Credenciais inválidas!");
         }
         return user;
     }
@@ -90,7 +91,7 @@ public class UserService {
     private void validatePassword(UserEntity user, String password) {
         if (!BcryptUtils.comparePasswords(password, user.getPassword())) {
             log.warn("Tentativa de login com senha incorreta para o email: {}", user.getEmail());
-            throw new IllegalArgumentException("Credenciais inválidas!");
+            throw new AuthenticationException("Credenciais inválidas!");
         }
     }
 

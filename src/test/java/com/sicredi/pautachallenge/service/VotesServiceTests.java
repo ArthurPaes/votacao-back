@@ -15,16 +15,22 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.sicredi.pautachallenge.domain.dto.VoteDTO;
+import com.sicredi.pautachallenge.domain.model.Section;
 import com.sicredi.pautachallenge.domain.model.VoteStatus;
 import com.sicredi.pautachallenge.domain.model.Votes;
-import com.sicredi.pautachallenge.domain.model.VoteStatus;
+import com.sicredi.pautachallenge.repository.SectionRepository;
 import com.sicredi.pautachallenge.repository.VotesRepository;
+
+import java.time.LocalDateTime;
 
 @ExtendWith(MockitoExtension.class)
 class VotesServiceTests {
 
     @Mock
     private VotesRepository votesRepository;
+
+    @Mock
+    private SectionRepository sectionRepository;
 
     @InjectMocks
     private VotesService votesService;
@@ -37,6 +43,13 @@ class VotesServiceTests {
     public void testCreateVote_Success() {
         VoteDTO voteDTO = new VoteDTO(1L, 1L, true);
 
+        // Mock section
+        Section section = new Section();
+        section.setId(1L);
+        section.setName("Test Section");
+        section.setStart_at(LocalDateTime.now());
+        section.setExpiration(60); // 60 minutes
+
         Votes savedVote = new Votes();
         savedVote.setId(1L);
         savedVote.setUserId(1L);
@@ -44,6 +57,7 @@ class VotesServiceTests {
         savedVote.setVote(true);
         savedVote.setStatus(VoteStatus.ABLE_TO_VOTE);
 
+        when(sectionRepository.findById(1L)).thenReturn(Optional.of(section));
         when(votesRepository.findByUserIdAndSectionId(anyLong(), anyLong())).thenReturn(Optional.empty());
         when(votesRepository.save(any(Votes.class))).thenReturn(savedVote);
 
@@ -76,11 +90,19 @@ class VotesServiceTests {
     public void testCreateVote_ExistingVote() {
         VoteDTO voteDTO = new VoteDTO(1L, 1L, true);
 
+        // Mock section
+        Section section = new Section();
+        section.setId(1L);
+        section.setName("Test Section");
+        section.setStart_at(LocalDateTime.now());
+        section.setExpiration(60); // 60 minutes
+
         Votes existingVote = new Votes();
         existingVote.setUserId(1L);
         existingVote.setSectionId(1L);
         existingVote.setVote(true);
 
+        when(sectionRepository.findById(1L)).thenReturn(Optional.of(section));
         when(votesRepository.findByUserIdAndSectionId(anyLong(), anyLong())).thenReturn(Optional.of(existingVote));
 
         // Como a validação de CPF é aleatória, vamos testar múltiplas vezes

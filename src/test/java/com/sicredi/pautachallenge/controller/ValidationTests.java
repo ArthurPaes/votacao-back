@@ -18,6 +18,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class ValidationTests {
 
     @Autowired

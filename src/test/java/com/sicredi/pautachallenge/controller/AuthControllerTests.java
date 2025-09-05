@@ -12,6 +12,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.sicredi.pautachallenge.domain.interfaces.UserLoginRequest;
 import com.sicredi.pautachallenge.domain.dto.UserResponseDTO;
+import com.sicredi.pautachallenge.exception.AuthenticationException;
 import com.sicredi.pautachallenge.service.UserService;
 
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,9 +49,9 @@ class AuthControllerTests {
     public void testLogin_FailedAuthentication() {
         UserLoginRequest request = new UserLoginRequest("test@example.com", "password");
 
-        doThrow(new IllegalArgumentException("Credenciais inválidas!")).when(userService).login(any(UserLoginRequest.class));
+        doThrow(new AuthenticationException("Credenciais inválidas!")).when(userService).login(any(UserLoginRequest.class));
 
-        assertThrows(IllegalArgumentException.class, () -> {
+        assertThrows(AuthenticationException.class, () -> {
             authController.login(request);
         });
     }

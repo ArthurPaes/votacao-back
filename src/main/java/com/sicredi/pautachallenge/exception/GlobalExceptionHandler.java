@@ -46,6 +46,14 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(e.getMessage(), "VALIDATION_ERROR", description);
     }
 
+    @ExceptionHandler(com.sicredi.pautachallenge.exception.AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleAuthenticationException(com.sicredi.pautachallenge.exception.AuthenticationException e, WebRequest request) {
+        String description = request != null ? request.getDescription(false) : "Unknown request";
+        log.warn("AuthenticationException capturada: {} - Request: {}", e.getMessage(), description);
+        return new ErrorResponse(e.getMessage(), "AUTHENTICATION_ERROR", description);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGenericException(Exception e, WebRequest request) {
